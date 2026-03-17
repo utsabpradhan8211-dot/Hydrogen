@@ -1,287 +1,144 @@
 'use strict';
 
-const state = {
-  users: [],
-  data: [],
-  sortBy: 'name',
-  sortDir: 'asc',
-  charts: {},
-  activityCount: 0,
-  metricTimer: null
+const kpiDefs = [
+  { id: 'rev', label: 'Revenue', val: 50, min: 0, max: 100, target: 80, metric: '₹' },
+  { id: 'profit', label: 'Profit', val: 40, min: 0, max: 100, target: 70, metric: '%' },
+  { id: 'nps', label: 'Customer NPS', val: 62, min: 0, max: 100, target: 75, metric: '' },
+  { id: 'learn', label: 'Learning Index', val: 55, min: 0, max: 100, target: 78, metric: '%' }
+];
+
+const bookingState = {
+  flight: null,
+  seat: null,
+  name: null,
+  takenSeats: new Set(['1B', '2C', '4A'])
 };
 
-const ui = {
-  dashboardPanel: document.getElementById('dashboardPanel'),
-  userBadge: document.getElementById('userBadge'),
-  userForm: document.getElementById('userForm'),
-  userTableBody: document.getElementById('userTableBody'),
-  globalSearch: document.getElementById('globalSearch'),
-  notifications: document.getElementById('notifications'),
-  settingsForm: document.getElementById('settingsForm'),
-  exportCsv: document.getElementById('exportCsv'),
-  themeToggle: document.getElementById('themeToggle')
-};
+const flights = [
+  { id: 'Mars-101', route: 'Delhi → Mars', fare: '₹12L' },
+  { id: 'Mars-204', route: 'Dubai → Mars', fare: '₹15L' },
+  { id: 'Mars-330', route: 'Tokyo → Mars', fare: '₹18L' }
+];
 
-const escapeHtml = (text) => String(text)
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;')
-  .replaceAll("'", '&#39;');
-
-const api = async (url, options = {}) => {
-  const response = await fetch(url, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options
-  });
-  const payload = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(payload.error || 'Request failed');
-  return payload;
-};
-
-function notify(message, type = 'info') {
-  const entry = document.createElement('div');
-  entry.className = 'notice';
-  entry.style.borderColor = type === 'error' ? 'rgba(255,120,120,.45)' : 'var(--border)';
-  entry.textContent = `${new Date().toLocaleTimeString()} • ${message}`;
-  ui.notifications.prepend(entry);
-  state.activityCount += 1;
-  document.getElementById('kpiActivity').textContent = `${state.activityCount} events`;
-}
-
-function updateKpis() {
-  const totalRevenue = state.data.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
-  const totalUsers = state.users.length;
-  const avgPerf = state.data.length
-    ? Math.round(state.data.reduce((sum, item) => sum + Number(item.performance || 0), 0) / state.data.length)
-    : 0;
-
-  document.getElementById('kpiRevenue').textContent = `$${totalRevenue.toLocaleString()}`;
-  document.getElementById('kpiUsers').textContent = `${totalUsers}`;
-  document.getElementById('kpiPerformance').textContent = `${avgPerf}%`;
-}
-
-function renderUsers(search = '') {
-  const term = search.toLowerCase();
-  const sorted = [...state.users]
-    .filter((user) => Object.values(user).join(' ').toLowerCase().includes(term))
-    .sort((a, b) => {
-      const left = String(a[state.sortBy]).toLowerCase();
-      const right = String(b[state.sortBy]).toLowerCase();
-      return state.sortDir === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
-    });
-
-  ui.userTableBody.innerHTML = sorted.map((user) => `
-    <tr>
-      <td>${escapeHtml(user.name)}</td>
-      <td>${escapeHtml(user.username)}</td>
-      <td>${escapeHtml(user.role)}</td>
-      <td>${escapeHtml(user.email)}</td>
-      <td>
-        <div class="row-actions">
-          <button class="action-btn secondary-btn" data-action="edit" data-id="${user.id}">Edit</button>
-          <button class="action-btn" data-action="delete" data-id="${user.id}">Delete</button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
-}
-
-function initCharts() {
-  const labels = state.data.map((item) => item.label);
-  const revenue = state.data.map((item) => item.revenue);
-  const performance = state.data.map((item) => item.performance);
-
-  const lineCtx = document.getElementById('lineChart');
-  const pieCtx = document.getElementById('pieChart');
-  const barCtx = document.getElementById('barChart');
-  if (!lineCtx || !pieCtx || !barCtx || !window.Chart) return;
-
-  Object.values(state.charts).forEach((chart) => chart.destroy());
-
-  state.charts.line = new Chart(lineCtx, {
-    type: 'line',
-    data: { labels, datasets: [{ label: 'Revenue', data: revenue, borderColor: '#46d0ff', tension: 0.36 }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  state.charts.pie = new Chart(pieCtx, {
-    type: 'pie',
-    data: { labels, datasets: [{ data: performance, backgroundColor: ['#46d0ff', '#9a66ff', '#00d39f', '#ff9f43'] }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-
-  state.charts.bar = new Chart(barCtx, {
-    type: 'bar',
-    data: { labels, datasets: [{ label: 'Performance', data: performance, backgroundColor: '#9a66ff' }] },
-    options: { responsive: true, maintainAspectRatio: false }
-  });
-}
-
-function simulateRealtimeMetrics() {
-  clearInterval(state.metricTimer);
-  state.metricTimer = setInterval(() => {
-    if (!state.data.length) return;
-    const i = Math.floor(Math.random() * state.data.length);
-    state.data[i].performance = Math.max(20, Math.min(100, state.data[i].performance + Math.round((Math.random() - 0.5) * 8)));
-    state.data[i].revenue = Math.max(1000, state.data[i].revenue + Math.round((Math.random() - 0.4) * 4000));
-    updateKpis();
-    initCharts();
-  }, 7000);
-}
-
-function exportCsv() {
-  const headers = ['id', 'label', 'revenue', 'performance', 'activeUsers', 'category'];
-  const rows = state.data.map((entry) => headers.map((h) => JSON.stringify(entry[h] ?? '')).join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = 'analytics-export.csv';
-  link.click();
-  URL.revokeObjectURL(link.href);
-  notify('Analytics CSV exported');
-}
-
-async function loadDashboard() {
-  const [usersRes, dataRes] = await Promise.all([
-    api('/api/users').catch(() => ({ users: [] })),
-    api('/api/data').catch(() => ({ data: [] }))
-  ]);
-
-  state.users = usersRes.users;
-  state.data = dataRes.data;
-
-  updateKpis();
-  renderUsers();
-  initCharts();
-  simulateRealtimeMetrics();
-  notify('Dashboard synchronized');
-}
-
-function bindNavigation() {
+function switchView(view) {
   document.querySelectorAll('.nav-link').forEach((button) => {
-    button.addEventListener('click', () => {
-      document.querySelectorAll('.nav-link').forEach((item) => item.classList.remove('active'));
-      button.classList.add('active');
-      const section = button.dataset.section;
-      document.querySelectorAll('.section').forEach((node) => node.classList.add('hidden'));
-      if (section !== 'overview') {
-        document.getElementById(section).classList.remove('hidden');
-      }
-    });
+    button.classList.toggle('active', button.dataset.view === view);
   });
+  document.getElementById('scorecard').classList.toggle('hidden', view !== 'scorecard');
+  document.getElementById('booking').classList.toggle('hidden', view !== 'booking');
 }
 
-function bindDragDrop() {
-  const cards = document.querySelectorAll('.kpi-card');
+function renderKpis() {
   const container = document.getElementById('kpiGrid');
-  let dragged;
-  cards.forEach((card) => {
-    card.addEventListener('dragstart', () => { dragged = card; });
-    card.addEventListener('dragover', (event) => event.preventDefault());
-    card.addEventListener('drop', () => {
-      if (dragged && dragged !== card) container.insertBefore(dragged, card);
-    });
+  container.innerHTML = '';
+
+  kpiDefs.forEach((kpi) => {
+    const progressPct = Math.min(100, Math.round((kpi.val / kpi.target) * 100));
+    const card = document.createElement('article');
+    card.className = 'kpi-card';
+    card.innerHTML = `
+      <div class="kpi-head">
+        <h3>${kpi.label}</h3>
+        <span class="kpi-value" id="val-${kpi.id}">${kpi.metric}${kpi.val}</span>
+      </div>
+      <p class="muted">Target: ${kpi.metric}${kpi.target}</p>
+      <input type="range" min="${kpi.min}" max="${kpi.max}" value="${kpi.val}" data-kpi="${kpi.id}">
+      <div class="progress-track"><div class="progress-fill" id="fill-${kpi.id}" style="width:${progressPct}%"></div></div>
+    `;
+    container.appendChild(card);
   });
 }
 
-function bindLazyLoad() {
-  const targets = document.querySelectorAll('[data-lazy="true"]');
-  targets.forEach((target) => target.classList.add('skeleton'));
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.remove('skeleton');
-        observer.unobserve(entry.target);
-      }
-    });
+function bindKpiControls() {
+  document.getElementById('kpiGrid').addEventListener('input', (event) => {
+    const slider = event.target.closest('input[data-kpi]');
+    if (!slider) return;
+
+    const kpi = kpiDefs.find((entry) => entry.id === slider.dataset.kpi);
+    if (!kpi) return;
+
+    kpi.val = Number(slider.value);
+    const progressPct = Math.min(100, Math.round((kpi.val / kpi.target) * 100));
+    document.getElementById(`val-${kpi.id}`).textContent = `${kpi.metric}${kpi.val}`;
+    document.getElementById(`fill-${kpi.id}`).style.width = `${progressPct}%`;
   });
-  targets.forEach((target) => observer.observe(target));
 }
 
-ui.userForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const form = new FormData(ui.userForm);
-  try {
-    await api('/api/users', {
-      method: 'POST',
-      body: JSON.stringify({
-        name: form.get('name'),
-        username: form.get('username'),
-        email: form.get('email'),
-        role: form.get('role')
-      })
+function renderFlights() {
+  const container = document.getElementById('flightList');
+  container.innerHTML = flights
+    .map((flight) => `
+      <div class="flight-card ${bookingState.flight === flight.id ? 'active' : ''}" data-flight="${flight.id}">
+        <strong>${flight.id}</strong>
+        <p>${flight.route} | ${flight.fare}</p>
+      </div>
+    `)
+    .join('');
+}
+
+function buildSeats() {
+  const seatMap = document.getElementById('seatMap');
+  let html = '';
+
+  for (let row = 1; row <= 5; row += 1) {
+    ['A', 'B', 'C'].forEach((col) => {
+      const id = `${row}${col}`;
+      const isTaken = bookingState.takenSeats.has(id);
+      const isSelected = bookingState.seat === id;
+      html += `<span class="seat ${isTaken ? 'taken' : ''} ${isSelected ? 'selected' : ''}" data-seat="${id}">${id}</span>`;
     });
-    const { users } = await api('/api/users');
-    state.users = users;
-    renderUsers(ui.globalSearch.value);
-    ui.userForm.reset();
-    updateKpis();
-    notify('Crew member added');
-  } catch (error) {
-    notify(error.message, 'error');
+    html += '<br/>';
   }
-});
 
-ui.userTableBody.addEventListener('click', async (event) => {
-  const button = event.target.closest('button[data-action]');
-  if (!button) return;
-  const userId = Number(button.dataset.id);
-  const action = button.dataset.action;
-  const record = state.users.find((u) => u.id === userId);
-  if (!record) return;
+  seatMap.innerHTML = html;
+}
 
-  try {
-    if (action === 'delete') {
-      await api(`/api/users/${userId}`, { method: 'DELETE' });
-      notify(`Deleted crew profile: ${record.username}`);
-    }
-
-    if (action === 'edit') {
-      const nextName = prompt('Update name', record.name);
-      if (!nextName) return;
-      await api(`/api/users/${userId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ name: nextName })
-      });
-      notify(`Updated crew profile: ${record.username}`);
-    }
-
-    const { users } = await api('/api/users');
-    state.users = users;
-    renderUsers(ui.globalSearch.value);
-  } catch (error) {
-    notify(error.message, 'error');
+function generateBoardingPass() {
+  const fname = document.getElementById('fname').value.trim();
+  const lname = document.getElementById('lname').value.trim();
+  if (!bookingState.flight || !bookingState.seat || !fname || !lname) {
+    document.getElementById('boardingPass').innerHTML = '<span class="muted">Please complete all fields and selections.</span>';
+    return;
   }
-});
 
-ui.globalSearch.addEventListener('input', (event) => {
-  renderUsers(event.target.value);
-});
+  bookingState.name = `${fname} ${lname}`;
+  document.getElementById('boardingPass').innerHTML = `
+    <h4>${bookingState.name}</h4>
+    <p>Flight: ${bookingState.flight}</p>
+    <p>Seat: ${bookingState.seat}</p>
+    <p>Status: Confirmed ✅</p>
+  `;
+}
 
-document.querySelectorAll('th[data-sort]').forEach((header) => {
-  header.addEventListener('click', () => {
-    const key = header.dataset.sort;
-    state.sortDir = state.sortBy === key && state.sortDir === 'asc' ? 'desc' : 'asc';
-    state.sortBy = key;
-    renderUsers(ui.globalSearch.value);
+function bindBookingActions() {
+  document.getElementById('flightList').addEventListener('click', (event) => {
+    const card = event.target.closest('[data-flight]');
+    if (!card) return;
+    bookingState.flight = card.dataset.flight;
+    renderFlights();
   });
-});
 
-ui.settingsForm.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const form = new FormData(ui.settingsForm);
-  ui.userBadge.textContent = `${form.get('displayName')} • Autonomous`;
-  notify(`System profile updated for ${form.get('displayName')}`);
-});
+  document.getElementById('seatMap').addEventListener('click', (event) => {
+    const seat = event.target.closest('[data-seat]');
+    if (!seat) return;
+    if (seat.classList.contains('taken')) return;
+    bookingState.seat = seat.dataset.seat;
+    buildSeats();
+  });
 
-ui.exportCsv.addEventListener('click', exportCsv);
-ui.themeToggle.addEventListener('click', () => document.documentElement.classList.toggle('light'));
+  document.getElementById('confirmBtn').addEventListener('click', generateBoardingPass);
+}
 
-(async () => {
-  bindNavigation();
-  bindDragDrop();
-  bindLazyLoad();
-  await loadDashboard();
-})();
+function init() {
+  document.querySelectorAll('.nav-link').forEach((button) => {
+    button.addEventListener('click', () => switchView(button.dataset.view));
+  });
+
+  renderKpis();
+  bindKpiControls();
+  renderFlights();
+  buildSeats();
+  bindBookingActions();
+}
+
+init();

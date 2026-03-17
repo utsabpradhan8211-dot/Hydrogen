@@ -3,111 +3,64 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Global Standard futuristic enterprise dashboard with autonomous analytics and predictive operations control." />
-    <meta name="theme-color" content="#050812" />
-    <title>GLOBAL STANDARD • Quantum Ops Grid</title>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <meta name="description" content="RedPlanet mission dashboard with balanced scorecard controls and Mars flight booking." />
+    <meta name="theme-color" content="#1b0f0a" />
+    <title>RedPlanet Mission Control</title>
     <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="script.js" defer></script>
   </head>
   <body>
-    <div class="noise" aria-hidden="true"></div>
-    <div class="aurora" aria-hidden="true"></div>
-    <div id="app" class="app" aria-live="polite">
-      <aside class="sidebar" aria-label="Primary navigation">
-        <div>
-          <h1>GLOBAL <span>STANDARD</span></h1>
-          <p class="muted">Quantum Operations Grid • Year 2060</p>
-        </div>
-
+    <div class="app">
+      <aside class="sidebar">
+        <h1>🚀 RedPlanet</h1>
+        <p class="muted">BSC + Interplanetary Booking</p>
         <nav>
-          <button class="nav-link active" data-section="overview" aria-controls="overview">Overview</button>
-          <button class="nav-link" data-section="analytics" aria-controls="analytics">Analytics</button>
-          <button class="nav-link" data-section="users" aria-controls="users">Crew Matrix</button>
-          <button class="nav-link" data-section="settings" aria-controls="settings">System</button>
+          <button class="nav-link active" data-view="scorecard">Balanced Scorecard</button>
+          <button class="nav-link" data-view="booking">Flight Booking</button>
         </nav>
-
-        <div class="theme-toggle-wrap card compact">
-          <label for="themeToggle">Theme mode</label>
-          <button id="themeToggle" class="secondary-btn" aria-label="Toggle dark and light theme">Dark / Light</button>
-        </div>
       </aside>
 
-      <main class="content" role="main">
-        <header class="topbar card compact" role="banner">
-          <input id="globalSearch" aria-label="Search users and records" type="search" placeholder="Search crew, roles, sectors..." />
-          <div class="profile-wrap">
-            <span id="userBadge" class="chip">Control AI • Autonomous</span>
-            <span class="pulse">LIVE</span>
+      <main class="main-content">
+        <section id="scorecard" class="panel">
+          <div class="topbar">
+            <h2>Balanced Scorecard Dashboard</h2>
+            <span class="tag">Live KPI Playground</span>
           </div>
-        </header>
 
-        <section id="dashboardPanel" aria-label="Dashboard panel">
-          <section class="kpi-grid" id="kpiGrid" aria-label="KPI cards">
-            <article class="kpi-card card" draggable="true"><h3>Revenue Flow</h3><p id="kpiRevenue">$0</p></article>
-            <article class="kpi-card card" draggable="true"><h3>Active Crew</h3><p id="kpiUsers">0</p></article>
-            <article class="kpi-card card" draggable="true"><h3>Performance</h3><p id="kpiPerformance">0%</p></article>
-            <article class="kpi-card card" draggable="true"><h3>Activity Pulse</h3><p id="kpiActivity">0 events</p></article>
-          </section>
+          <div id="kpiGrid" class="kpi-grid"></div>
+        </section>
 
-          <section id="overview" class="grid-two" data-lazy="true" aria-label="Overview charts">
-            <article class="card chart-card">
-              <h3>Revenue Trend</h3>
-              <canvas id="lineChart" aria-label="Revenue trend chart"></canvas>
+        <section id="booking" class="panel hidden">
+          <div class="topbar">
+            <h2>RedPlanet Booking Console</h2>
+            <span class="tag">Mission Seat Allocation</span>
+          </div>
+
+          <div class="booking-grid">
+            <article class="card">
+              <h3>Select Flight</h3>
+              <div id="flightList"></div>
             </article>
-            <article class="card chart-card">
-              <h3>Regional Distribution</h3>
-              <canvas id="pieChart" aria-label="Regional pie chart"></canvas>
+
+            <article class="card">
+              <h3>Passenger</h3>
+              <div class="form-grid">
+                <input id="fname" placeholder="First Name" maxlength="40" />
+                <input id="lname" placeholder="Last Name" maxlength="40" />
+              </div>
             </article>
-          </section>
 
-          <section id="analytics" class="card section hidden" data-lazy="true">
-            <div class="section-head">
-              <h3>Analytics</h3>
-              <button id="exportCsv">Export CSV</button>
-            </div>
-            <div class="chart-card">
-              <canvas id="barChart" aria-label="Performance bar chart"></canvas>
-            </div>
-          </section>
+            <article class="card">
+              <h3>Select Seat</h3>
+              <div id="seatMap" class="seat-map"></div>
+            </article>
 
-          <section id="users" class="card section hidden">
-            <h3>Crew Management</h3>
-            <form id="userForm" class="inline-form">
-              <input name="name" placeholder="Name" required maxlength="90" />
-              <input name="username" placeholder="Username" required maxlength="40" />
-              <input name="email" placeholder="Email" type="email" required maxlength="120" />
-              <select name="role" aria-label="Role selection">
-                <option>Admin</option>
-                <option>Manager</option>
-                <option selected>User</option>
-              </select>
-              <button type="submit">Add Crew</button>
-            </form>
-            <table aria-label="Users table">
-              <thead>
-                <tr>
-                  <th data-sort="name">Name</th>
-                  <th data-sort="username">Username</th>
-                  <th data-sort="role">Role</th>
-                  <th data-sort="email">Email</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="userTableBody"></tbody>
-            </table>
-          </section>
-
-          <section id="settings" class="card section hidden">
-            <h3>System Settings</h3>
-            <form id="settingsForm" class="inline-form">
-              <input name="displayName" placeholder="Display name" maxlength="90" required />
-              <input name="email" placeholder="Email" type="email" required maxlength="120" />
-              <button type="submit">Save Settings</button>
-            </form>
-            <div id="notifications" class="notification-list" aria-live="polite"></div>
-          </section>
+            <article class="card">
+              <h3>Boarding Pass</h3>
+              <div id="boardingPass" class="boarding-pass muted">Choose flight, name and seat to generate pass.</div>
+              <button id="confirmBtn">Confirm Mission Pass</button>
+            </article>
+          </div>
         </section>
       </main>
     </div>
