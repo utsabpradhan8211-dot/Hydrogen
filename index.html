@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Global Standard Dashboard with analytics, user management and role-based access." />
+    <title>Global Standard Dashboard</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div id="app" class="app" aria-live="polite">
+      <aside class="sidebar" aria-label="Main navigation">
+        <h1>GLOBAL STANDARD</h1>
+        <nav>
+          <button class="nav-link active" data-section="overview">Overview</button>
+          <button class="nav-link" data-section="analytics">Analytics</button>
+          <button class="nav-link" data-section="users">Users</button>
+          <button class="nav-link" data-section="settings">Settings</button>
+        </nav>
+        <div class="theme-toggle-wrap">
+          <label for="themeToggle">Theme</label>
+          <button id="themeToggle" class="secondary-btn" aria-label="Toggle dark and light theme">Dark / Light</button>
+        </div>
+      </aside>
+
+      <main class="content" role="main">
+        <header class="topbar">
+          <input id="globalSearch" aria-label="Search users and records" type="search" placeholder="Search records..." />
+          <div class="profile-wrap">
+            <span id="userBadge">Guest</span>
+            <button id="logoutBtn" class="secondary-btn">Logout</button>
+          </div>
+        </header>
+
+        <section id="loginPanel" class="panel card">
+          <h2>Secure Login</h2>
+          <p>Use demo accounts: admin/Admin@123, manager/Manager@123, user/User@123</p>
+          <form id="loginForm">
+            <label>Username<input type="text" name="username" required maxlength="40" /></label>
+            <label>Password<input type="password" name="password" required maxlength="80" /></label>
+            <button type="submit">Login</button>
+          </form>
+        </section>
+
+        <section id="dashboardPanel" class="hidden">
+          <div class="kpi-grid" id="kpiGrid" aria-label="KPI cards">
+            <article class="kpi-card" draggable="true"><h3>Revenue</h3><p id="kpiRevenue">$0</p></article>
+            <article class="kpi-card" draggable="true"><h3>Users</h3><p id="kpiUsers">0</p></article>
+            <article class="kpi-card" draggable="true"><h3>Performance</h3><p id="kpiPerformance">0%</p></article>
+            <article class="kpi-card" draggable="true"><h3>Activity</h3><p id="kpiActivity">0 events</p></article>
+          </div>
+
+          <div class="grid-two" id="overview" data-lazy="true">
+            <article class="card">
+              <h3>Revenue Trend</h3>
+              <canvas id="lineChart"></canvas>
+            </article>
+            <article class="card">
+              <h3>Regional Distribution</h3>
+              <canvas id="pieChart"></canvas>
+            </article>
+          </div>
+
+          <section id="analytics" class="card section hidden" data-lazy="true">
+            <h3>Analytics</h3>
+            <canvas id="barChart"></canvas>
+            <button id="exportCsv">Export CSV</button>
+          </section>
+
+          <section id="users" class="card section hidden">
+            <h3>User Management</h3>
+            <form id="userForm" class="inline-form">
+              <input name="name" placeholder="Name" required />
+              <input name="username" placeholder="Username" required />
+              <input name="email" placeholder="Email" type="email" required />
+              <select name="role" aria-label="Role selection">
+                <option>Admin</option>
+                <option>Manager</option>
+                <option selected>User</option>
+              </select>
+              <button type="submit">Add User</button>
+            </form>
+            <table>
+              <thead>
+                <tr>
+                  <th data-sort="name">Name</th>
+                  <th data-sort="username">Username</th>
+                  <th data-sort="role">Role</th>
+                  <th data-sort="email">Email</th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody"></tbody>
+            </table>
+          </section>
+
+          <section id="settings" class="card section hidden">
+            <h3>Settings</h3>
+            <form id="settingsForm" class="inline-form">
+              <input name="displayName" placeholder="Display name" maxlength="90" required />
+              <input name="email" placeholder="Email" type="email" required />
+              <button type="submit">Save Settings</button>
+            </form>
+            <div id="notifications" class="notification-list" aria-live="polite"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
