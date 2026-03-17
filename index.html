@@ -1,10 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="RedPlanet mission dashboard with balanced scorecard controls and Mars flight booking." />
-    <meta name="theme-color" content="#1b0f0a" />
+    <meta
+      name="description"
+      content="RedPlanet mission dashboard with balanced scorecard controls and Mars flight booking."
+    />
+    <meta name="theme-color" content="#f5e6dd" />
     <title>RedPlanet Mission Control</title>
     <link rel="stylesheet" href="styles.css" />
     <script src="script.js" defer></script>
@@ -12,7 +15,10 @@
   <body>
     <div class="app">
       <aside class="sidebar">
-        <h1>🚀 RedPlanet</h1>
+        <div class="brand-row">
+          <h1>🚀 RedPlanet</h1>
+          <button id="themeToggle" class="icon-btn" aria-label="Toggle dark theme">🌙</button>
+        </div>
         <p class="muted">BSC + Interplanetary Booking</p>
         <nav>
           <button class="nav-link active" data-view="scorecard">Balanced Scorecard</button>
@@ -26,7 +32,7 @@
             <h2>Balanced Scorecard Dashboard</h2>
             <span class="tag">Live KPI Playground</span>
           </div>
-
+          <p class="muted">Adjust each metric to preview mission performance against target values.</p>
           <div id="kpiGrid" class="kpi-grid"></div>
         </section>
 
@@ -57,7 +63,9 @@
 
             <article class="card">
               <h3>Boarding Pass</h3>
-              <div id="boardingPass" class="boarding-pass muted">Choose flight, name and seat to generate pass.</div>
+              <div id="boardingPass" class="boarding-pass muted">
+                Choose flight, name and seat to generate pass.
+              </div>
               <button id="confirmBtn">Confirm Mission Pass</button>
             </article>
           </div>

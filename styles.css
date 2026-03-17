@@ -1,24 +1,41 @@
 :root {
-  --mars: #c94b1e;
-  --mars-dark: #7b2a10;
-  --sky: #fff3ed;
-  --ink: #2d1a12;
-  --card: #ffffff;
+  --bg: radial-gradient(circle at 10% 0%, #ffe6d9 0%, #fff3ed 40%, #ffece3 100%);
+  --surface: #ffffff;
+  --surface-soft: #fff7f2;
+  --text: #2d1a12;
+  --muted: #7a5142;
+  --primary: #c94b1e;
+  --primary-deep: #7b2a10;
   --border: #ebcfc3;
-  --night: #16100d;
-  --night-2: #211813;
-  --night-card: #2a1f19;
-  --night-text: #f7eae4;
+  --tag-bg: #ffe2d3;
+  --tag-border: #f4c3ac;
+  --track: #f8ddd1;
+  --seat: #f6ddd0;
   --ok: #2cbf70;
   --danger: #db3a34;
+}
+
+html[data-theme='dark'] {
+  --bg: linear-gradient(180deg, #120d0b 0%, #1a120f 45%, #221712 100%);
+  --surface: #231914;
+  --surface-soft: #2b1f19;
+  --text: #f5e7df;
+  --muted: #c7a89a;
+  --primary: #ff7a45;
+  --primary-deep: #ffad8b;
+  --border: #4d372d;
+  --tag-bg: #3b2a22;
+  --tag-border: #594137;
+  --track: #493229;
+  --seat: #3b2b24;
 }
 
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: radial-gradient(circle at 10% 0%, #ffe6d9 0%, var(--sky) 40%, #ffece3 100%);
-  color: var(--ink);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
 
 .app {
@@ -28,17 +45,33 @@ body {
 }
 
 .sidebar {
-  background: linear-gradient(180deg, #fff 0%, #fff3ed 100%);
+  background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 1.1rem;
 }
 
-.sidebar h1 {
-  margin: 0;
-  color: var(--mars-dark);
+.brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
-.muted { color: #7a5142; }
+.sidebar h1 {
+  margin: 0;
+  color: var(--primary-deep);
+}
+
+.icon-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+}
+
+.muted { color: var(--muted); }
 
 nav {
   display: grid;
@@ -48,8 +81,8 @@ nav {
 
 .nav-link {
   border: 1px solid var(--border);
-  background: #fff;
-  color: var(--ink);
+  background: var(--surface);
+  color: var(--text);
   border-radius: 10px;
   padding: 0.65rem 0.7rem;
   text-align: left;
@@ -58,8 +91,8 @@ nav {
 
 .nav-link.active,
 .nav-link:hover {
-  border-color: var(--mars);
-  background: #fff7f2;
+  border-color: var(--primary);
+  background: var(--surface-soft);
 }
 
 .main-content {
@@ -75,9 +108,9 @@ nav {
 }
 
 .tag {
-  background: #ffe2d3;
-  color: var(--mars-dark);
-  border: 1px solid #f4c3ac;
+  background: var(--tag-bg);
+  color: var(--primary-deep);
+  border: 1px solid var(--tag-border);
   border-radius: 999px;
   padding: 0.25rem 0.7rem;
   font-size: 0.85rem;
@@ -91,7 +124,7 @@ nav {
 
 .card,
 .kpi-card {
-  background: var(--card);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1rem;
@@ -107,25 +140,25 @@ nav {
 .kpi-value {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--mars-dark);
+  color: var(--primary-deep);
 }
 
 .kpi-card input[type='range'] {
   width: 100%;
-  accent-color: var(--mars);
+  accent-color: var(--primary);
 }
 
 .progress-track {
   margin-top: 0.5rem;
   height: 8px;
   border-radius: 999px;
-  background: #f8ddd1;
+  background: var(--track);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #ff935f, var(--mars));
+  background: linear-gradient(90deg, #ff935f, var(--primary));
 }
 
 .booking-grid {
@@ -134,50 +167,32 @@ nav {
   gap: 0.9rem;
 }
 
-#booking {
-  background: linear-gradient(180deg, var(--night) 0%, var(--night-2) 100%);
-  color: var(--night-text);
-  border-radius: 14px;
-  padding: 1rem;
-}
-
-#booking .card {
-  background: var(--night-card);
-  border-color: #413028;
-  box-shadow: none;
-}
-
-#booking .tag {
-  background: #3b2a22;
-  border-color: #594137;
-  color: #ffd8c6;
-}
-
 .flight-card {
-  background: #31251f;
-  border: 1px solid #4b372e;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
   cursor: pointer;
 }
 
-.flight-card.active { border-color: var(--mars); }
+.flight-card.active { border-color: var(--primary); }
 
 .form-grid { display: grid; gap: 0.5rem; }
 
 input, button {
-  border: 1px solid #715242;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.6rem 0.7rem;
-  background: #1f1713;
-  color: var(--night-text);
+  background: var(--surface-soft);
+  color: var(--text);
 }
 
 button {
   cursor: pointer;
-  background: linear-gradient(90deg, #9f3a17, #c94b1e);
+  background: linear-gradient(90deg, #9f3a17, var(--primary));
   border: none;
+  color: #fff8f4;
 }
 
 .seat-map { line-height: 2.2; }
@@ -188,10 +203,10 @@ button {
   margin: 0.2rem;
   padding: 0.3rem;
   border-radius: 7px;
-  background: #3a2b24;
+  background: var(--seat);
   cursor: pointer;
 }
-.seat.taken { background: var(--danger); cursor: not-allowed; }
+.seat.taken { background: var(--danger); color: #fff; cursor: not-allowed; }
 .seat.selected { background: var(--ok); color: #0d2618; }
 
 .hidden { display: none; }

@@ -67,12 +67,14 @@ function bindKpiControls() {
 function renderFlights() {
   const container = document.getElementById('flightList');
   container.innerHTML = flights
-    .map((flight) => `
+    .map(
+      (flight) => `
       <div class="flight-card ${bookingState.flight === flight.id ? 'active' : ''}" data-flight="${flight.id}">
         <strong>${flight.id}</strong>
         <p>${flight.route} | ${flight.fare}</p>
       </div>
-    `)
+    `
+    )
     .join('');
 }
 
@@ -110,6 +112,22 @@ function generateBoardingPass() {
   `;
 }
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  localStorage.setItem('rp-theme', theme);
+  document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+
+function bindThemeToggle() {
+  const preferred = localStorage.getItem('rp-theme') || 'light';
+  applyTheme(preferred);
+
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+}
+
 function bindBookingActions() {
   document.getElementById('flightList').addEventListener('click', (event) => {
     const card = event.target.closest('[data-flight]');
@@ -134,6 +152,7 @@ function init() {
     button.addEventListener('click', () => switchView(button.dataset.view));
   });
 
+  bindThemeToggle();
   renderKpis();
   bindKpiControls();
   renderFlights();
