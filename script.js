@@ -8,7 +8,8 @@ const state = {
   sortBy: 'name',
   sortDir: 'asc',
   charts: {},
-  activityCount: 0
+  activityCount: 0,
+  metricTimer: null
 };
 
 const ui = {
@@ -44,38 +45,43 @@ const api = async (url, options = {}) => {
   return payload;
 };
 
-function notify(message) {
+function notify(message, type = 'info') {
   const entry = document.createElement('div');
   entry.className = 'notice';
-  entry.textContent = `${new Date().toLocaleTimeString()} - ${message}`;
+  entry.style.borderColor = type === 'error' ? 'rgba(255,120,120,.45)' : 'var(--border)';
+  entry.textContent = `${new Date().toLocaleTimeString()} • ${message}`;
   ui.notifications.prepend(entry);
   state.activityCount += 1;
   document.getElementById('kpiActivity').textContent = `${state.activityCount} events`;
 }
 
 function setRoleUi() {
+  const canRead = state.permissions.includes('read');
   const canCreate = state.permissions.includes('create');
   const canSettings = state.permissions.includes('settings');
-  document.getElementById('users').classList.toggle('hidden', !canCreate && !state.permissions.includes('read'));
+
+  document.getElementById('users').classList.toggle('hidden', !canRead);
   document.getElementById('settings').classList.toggle('hidden', !canSettings);
   ui.userForm.classList.toggle('hidden', !canCreate);
 }
 
 function updateKpis() {
-  const totalRevenue = state.data.reduce((sum, item) => sum + item.revenue, 0);
+  const totalRevenue = state.data.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
   const totalUsers = state.users.length;
   const avgPerf = state.data.length
-    ? Math.round(state.data.reduce((sum, item) => sum + item.performance, 0) / state.data.length)
+    ? Math.round(state.data.reduce((sum, item) => sum + Number(item.performance || 0), 0) / state.data.length)
     : 0;
+
   document.getElementById('kpiRevenue').textContent = `$${totalRevenue.toLocaleString()}`;
   document.getElementById('kpiUsers').textContent = `${totalUsers}`;
   document.getElementById('kpiPerformance').textContent = `${avgPerf}%`;
 }
 
 function renderUsers(search = '') {
+  const canDelete = state.permissions.includes('delete');
   const term = search.toLowerCase();
   const sorted = [...state.users]
-    .filter((u) => Object.values(u).join(' ').toLowerCase().includes(term))
+    .filter((user) => Object.values(user).join(' ').toLowerCase().includes(term))
     .sort((a, b) => {
       const left = String(a[state.sortBy]).toLowerCase();
       const right = String(b[state.sortBy]).toLowerCase();
@@ -88,6 +94,12 @@ function renderUsers(search = '') {
       <td>${escapeHtml(user.username)}</td>
       <td>${escapeHtml(user.role)}</td>
       <td>${escapeHtml(user.email)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="action-btn secondary-btn" data-action="edit" data-id="${user.id}">Edit</button>
+          ${canDelete ? `<button class="action-btn" data-action="delete" data-id="${user.id}">Delete</button>` : ''}
+        </div>
+      </td>
     </tr>
   `).join('');
 }
@@ -105,21 +117,33 @@ function initCharts() {
 
   state.charts.line = new Chart(lineCtx, {
     type: 'line',
-    data: { labels, datasets: [{ label: 'Revenue', data: revenue, borderColor: '#3ca9ff', tension: 0.4 }] },
+    data: { labels, datasets: [{ label: 'Revenue', data: revenue, borderColor: '#46d0ff', tension: 0.36 }] },
     options: { responsive: true, maintainAspectRatio: false }
   });
 
   state.charts.pie = new Chart(pieCtx, {
     type: 'pie',
-    data: { labels, datasets: [{ data: performance, backgroundColor: ['#3ca9ff', '#8a61ff', '#22c55e', '#f97316'] }] },
+    data: { labels, datasets: [{ data: performance, backgroundColor: ['#46d0ff', '#9a66ff', '#00d39f', '#ff9f43'] }] },
     options: { responsive: true, maintainAspectRatio: false }
   });
 
   state.charts.bar = new Chart(barCtx, {
     type: 'bar',
-    data: { labels, datasets: [{ label: 'Performance', data: performance, backgroundColor: '#8a61ff' }] },
+    data: { labels, datasets: [{ label: 'Performance', data: performance, backgroundColor: '#9a66ff' }] },
     options: { responsive: true, maintainAspectRatio: false }
   });
+}
+
+function simulateRealtimeMetrics() {
+  clearInterval(state.metricTimer);
+  state.metricTimer = setInterval(() => {
+    if (!state.data.length || ui.dashboardPanel.classList.contains('hidden')) return;
+    const i = Math.floor(Math.random() * state.data.length);
+    state.data[i].performance = Math.max(20, Math.min(100, state.data[i].performance + Math.round((Math.random() - 0.5) * 8)));
+    state.data[i].revenue = Math.max(1000, state.data[i].revenue + Math.round((Math.random() - 0.4) * 4000));
+    updateKpis();
+    initCharts();
+  }, 7000);
 }
 
 function exportCsv() {
@@ -131,25 +155,28 @@ function exportCsv() {
   link.href = URL.createObjectURL(blob);
   link.download = 'analytics-export.csv';
   link.click();
+  URL.revokeObjectURL(link.href);
+  notify('Analytics CSV exported');
 }
 
 async function loadDashboard() {
-  const [{ user, permissions }, { users }, { data }] = await Promise.all([
+  const [{ user, permissions }, usersRes, dataRes] = await Promise.all([
     api('/api/me'),
-    api('/api/users'),
-    api('/api/data')
+    api('/api/users').catch(() => ({ users: [] })),
+    api('/api/data').catch(() => ({ data: [] }))
   ]);
 
   state.currentUser = user;
   state.permissions = permissions;
-  state.users = users;
-  state.data = data;
+  state.users = usersRes.users;
+  state.data = dataRes.data;
 
   ui.userBadge.textContent = `${user.name} (${user.role})`;
   updateKpis();
   renderUsers();
   setRoleUi();
   initCharts();
+  simulateRealtimeMetrics();
   notify('Dashboard loaded successfully');
 }
 
@@ -175,9 +202,7 @@ function bindDragDrop() {
     card.addEventListener('dragstart', () => { dragged = card; });
     card.addEventListener('dragover', (event) => event.preventDefault());
     card.addEventListener('drop', () => {
-      if (dragged && dragged !== card) {
-        container.insertBefore(dragged, card);
-      }
+      if (dragged && dragged !== card) container.insertBefore(dragged, card);
     });
   });
 }
@@ -202,16 +227,13 @@ ui.loginForm.addEventListener('submit', async (event) => {
   try {
     await api('/api/login', {
       method: 'POST',
-      body: JSON.stringify({
-        username: form.get('username'),
-        password: form.get('password')
-      })
+      body: JSON.stringify({ username: form.get('username'), password: form.get('password') })
     });
     ui.loginPanel.classList.add('hidden');
     ui.dashboardPanel.classList.remove('hidden');
     await loadDashboard();
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
   }
 });
 
@@ -221,6 +243,7 @@ ui.logoutBtn.addEventListener('click', async () => {
   } catch (_error) {
     // no-op
   }
+  clearInterval(state.metricTimer);
   ui.dashboardPanel.classList.add('hidden');
   ui.loginPanel.classList.remove('hidden');
   ui.userBadge.textContent = 'Guest';
@@ -244,10 +267,42 @@ ui.userForm.addEventListener('submit', async (event) => {
     state.users = users;
     renderUsers(ui.globalSearch.value);
     ui.userForm.reset();
-    notify('User created');
     updateKpis();
+    notify('User created');
   } catch (error) {
-    notify(error.message);
+    notify(error.message, 'error');
+  }
+});
+
+ui.userTableBody.addEventListener('click', async (event) => {
+  const button = event.target.closest('button[data-action]');
+  if (!button) return;
+  const userId = Number(button.dataset.id);
+  const action = button.dataset.action;
+  const record = state.users.find((u) => u.id === userId);
+  if (!record) return;
+
+  try {
+    if (action === 'delete') {
+      await api(`/api/users/${userId}`, { method: 'DELETE' });
+      notify(`Deleted user: ${record.username}`);
+    }
+
+    if (action === 'edit') {
+      const nextName = prompt('Update name', record.name);
+      if (!nextName) return;
+      await api(`/api/users/${userId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: nextName })
+      });
+      notify(`Updated user: ${record.username}`);
+    }
+
+    const { users } = await api('/api/users');
+    state.users = users;
+    renderUsers(ui.globalSearch.value);
+  } catch (error) {
+    notify(error.message, 'error');
   }
 });
 
@@ -271,9 +326,7 @@ ui.settingsForm.addEventListener('submit', (event) => {
 });
 
 ui.exportCsv.addEventListener('click', exportCsv);
-ui.themeToggle.addEventListener('click', () => {
-  document.documentElement.classList.toggle('light');
-});
+ui.themeToggle.addEventListener('click', () => document.documentElement.classList.toggle('light'));
 
 (async () => {
   bindNavigation();

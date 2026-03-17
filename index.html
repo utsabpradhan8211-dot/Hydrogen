@@ -3,79 +3,90 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Global Standard Dashboard with analytics, user management and role-based access." />
-    <title>Global Standard Dashboard</title>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <meta name="description" content="Global Standard futuristic enterprise dashboard with secure authentication, analytics, and role-based control." />
+    <meta name="theme-color" content="#081122" />
+    <title>GLOBAL STANDARD • Command Dashboard</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
     <script src="script.js" defer></script>
   </head>
   <body>
+    <div class="noise" aria-hidden="true"></div>
     <div id="app" class="app" aria-live="polite">
-      <aside class="sidebar" aria-label="Main navigation">
-        <h1>GLOBAL STANDARD</h1>
+      <aside class="sidebar" aria-label="Primary navigation">
+        <div>
+          <h1>GLOBAL <span>STANDARD</span></h1>
+          <p class="muted">Operations Command</p>
+        </div>
+
         <nav>
-          <button class="nav-link active" data-section="overview">Overview</button>
-          <button class="nav-link" data-section="analytics">Analytics</button>
-          <button class="nav-link" data-section="users">Users</button>
-          <button class="nav-link" data-section="settings">Settings</button>
+          <button class="nav-link active" data-section="overview" aria-controls="overview">Overview</button>
+          <button class="nav-link" data-section="analytics" aria-controls="analytics">Analytics</button>
+          <button class="nav-link" data-section="users" aria-controls="users">Users</button>
+          <button class="nav-link" data-section="settings" aria-controls="settings">Settings</button>
         </nav>
-        <div class="theme-toggle-wrap">
-          <label for="themeToggle">Theme</label>
+
+        <div class="theme-toggle-wrap card compact">
+          <label for="themeToggle">Theme mode</label>
           <button id="themeToggle" class="secondary-btn" aria-label="Toggle dark and light theme">Dark / Light</button>
         </div>
       </aside>
 
       <main class="content" role="main">
-        <header class="topbar">
-          <input id="globalSearch" aria-label="Search users and records" type="search" placeholder="Search records..." />
+        <header class="topbar card compact" role="banner">
+          <input id="globalSearch" aria-label="Search users and records" type="search" placeholder="Search users, roles, records..." />
           <div class="profile-wrap">
-            <span id="userBadge">Guest</span>
-            <button id="logoutBtn" class="secondary-btn">Logout</button>
+            <span id="userBadge" class="chip">Guest</span>
+            <button id="logoutBtn" class="secondary-btn" aria-label="Logout current session">Logout</button>
           </div>
         </header>
 
-        <section id="loginPanel" class="panel card">
+        <section id="loginPanel" class="panel card" aria-label="Authentication panel">
           <h2>Secure Login</h2>
-          <p>Use demo accounts: admin/Admin@123, manager/Manager@123, user/User@123</p>
+          <p class="muted">Demo users: <strong>admin/Admin@123</strong>, <strong>manager/Manager@123</strong>, <strong>user/User@123</strong></p>
           <form id="loginForm">
-            <label>Username<input type="text" name="username" required maxlength="40" /></label>
-            <label>Password<input type="password" name="password" required maxlength="80" /></label>
+            <label>Username<input type="text" name="username" required maxlength="40" autocomplete="username" /></label>
+            <label>Password<input type="password" name="password" required maxlength="80" autocomplete="current-password" /></label>
             <button type="submit">Login</button>
           </form>
         </section>
 
-        <section id="dashboardPanel" class="hidden">
-          <div class="kpi-grid" id="kpiGrid" aria-label="KPI cards">
-            <article class="kpi-card" draggable="true"><h3>Revenue</h3><p id="kpiRevenue">$0</p></article>
-            <article class="kpi-card" draggable="true"><h3>Users</h3><p id="kpiUsers">0</p></article>
-            <article class="kpi-card" draggable="true"><h3>Performance</h3><p id="kpiPerformance">0%</p></article>
-            <article class="kpi-card" draggable="true"><h3>Activity</h3><p id="kpiActivity">0 events</p></article>
-          </div>
+        <section id="dashboardPanel" class="hidden" aria-label="Dashboard panel">
+          <section class="kpi-grid" id="kpiGrid" aria-label="KPI cards">
+            <article class="kpi-card card" draggable="true"><h3>Revenue</h3><p id="kpiRevenue">$0</p></article>
+            <article class="kpi-card card" draggable="true"><h3>Users</h3><p id="kpiUsers">0</p></article>
+            <article class="kpi-card card" draggable="true"><h3>Performance</h3><p id="kpiPerformance">0%</p></article>
+            <article class="kpi-card card" draggable="true"><h3>Activity</h3><p id="kpiActivity">0 events</p></article>
+          </section>
 
-          <div class="grid-two" id="overview" data-lazy="true">
-            <article class="card">
+          <section id="overview" class="grid-two" data-lazy="true" aria-label="Overview charts">
+            <article class="card chart-card">
               <h3>Revenue Trend</h3>
-              <canvas id="lineChart"></canvas>
+              <canvas id="lineChart" aria-label="Revenue trend chart"></canvas>
             </article>
-            <article class="card">
+            <article class="card chart-card">
               <h3>Regional Distribution</h3>
-              <canvas id="pieChart"></canvas>
+              <canvas id="pieChart" aria-label="Regional pie chart"></canvas>
             </article>
-          </div>
+          </section>
 
           <section id="analytics" class="card section hidden" data-lazy="true">
-            <h3>Analytics</h3>
-            <canvas id="barChart"></canvas>
-            <button id="exportCsv">Export CSV</button>
+            <div class="section-head">
+              <h3>Analytics</h3>
+              <button id="exportCsv">Export CSV</button>
+            </div>
+            <div class="chart-card">
+              <canvas id="barChart" aria-label="Performance bar chart"></canvas>
+            </div>
           </section>
 
           <section id="users" class="card section hidden">
             <h3>User Management</h3>
             <form id="userForm" class="inline-form">
-              <input name="name" placeholder="Name" required />
-              <input name="username" placeholder="Username" required />
-              <input name="email" placeholder="Email" type="email" required />
+              <input name="name" placeholder="Name" required maxlength="90" />
+              <input name="username" placeholder="Username" required maxlength="40" />
+              <input name="email" placeholder="Email" type="email" required maxlength="120" />
               <select name="role" aria-label="Role selection">
                 <option>Admin</option>
                 <option>Manager</option>
@@ -83,13 +94,14 @@
               </select>
               <button type="submit">Add User</button>
             </form>
-            <table>
+            <table aria-label="Users table">
               <thead>
                 <tr>
                   <th data-sort="name">Name</th>
                   <th data-sort="username">Username</th>
                   <th data-sort="role">Role</th>
                   <th data-sort="email">Email</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="userTableBody"></tbody>
@@ -100,7 +112,7 @@
             <h3>Settings</h3>
             <form id="settingsForm" class="inline-form">
               <input name="displayName" placeholder="Display name" maxlength="90" required />
-              <input name="email" placeholder="Email" type="email" required />
+              <input name="email" placeholder="Email" type="email" required maxlength="120" />
               <button type="submit">Save Settings</button>
             </form>
             <div id="notifications" class="notification-list" aria-live="polite"></div>
