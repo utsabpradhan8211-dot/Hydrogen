@@ -1,8 +1,6 @@
 'use strict';
 
 const state = {
-  currentUser: null,
-  permissions: [],
   users: [],
   data: [],
   sortBy: 'name',
@@ -13,10 +11,7 @@ const state = {
 };
 
 const ui = {
-  loginPanel: document.getElementById('loginPanel'),
   dashboardPanel: document.getElementById('dashboardPanel'),
-  loginForm: document.getElementById('loginForm'),
-  logoutBtn: document.getElementById('logoutBtn'),
   userBadge: document.getElementById('userBadge'),
   userForm: document.getElementById('userForm'),
   userTableBody: document.getElementById('userTableBody'),
@@ -36,7 +31,6 @@ const escapeHtml = (text) => String(text)
 
 const api = async (url, options = {}) => {
   const response = await fetch(url, {
-    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     ...options
   });
@@ -55,16 +49,6 @@ function notify(message, type = 'info') {
   document.getElementById('kpiActivity').textContent = `${state.activityCount} events`;
 }
 
-function setRoleUi() {
-  const canRead = state.permissions.includes('read');
-  const canCreate = state.permissions.includes('create');
-  const canSettings = state.permissions.includes('settings');
-
-  document.getElementById('users').classList.toggle('hidden', !canRead);
-  document.getElementById('settings').classList.toggle('hidden', !canSettings);
-  ui.userForm.classList.toggle('hidden', !canCreate);
-}
-
 function updateKpis() {
   const totalRevenue = state.data.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
   const totalUsers = state.users.length;
@@ -78,7 +62,6 @@ function updateKpis() {
 }
 
 function renderUsers(search = '') {
-  const canDelete = state.permissions.includes('delete');
   const term = search.toLowerCase();
   const sorted = [...state.users]
     .filter((user) => Object.values(user).join(' ').toLowerCase().includes(term))
@@ -97,7 +80,7 @@ function renderUsers(search = '') {
       <td>
         <div class="row-actions">
           <button class="action-btn secondary-btn" data-action="edit" data-id="${user.id}">Edit</button>
-          ${canDelete ? `<button class="action-btn" data-action="delete" data-id="${user.id}">Delete</button>` : ''}
+          <button class="action-btn" data-action="delete" data-id="${user.id}">Delete</button>
         </div>
       </td>
     </tr>
@@ -112,6 +95,7 @@ function initCharts() {
   const lineCtx = document.getElementById('lineChart');
   const pieCtx = document.getElementById('pieChart');
   const barCtx = document.getElementById('barChart');
+  if (!lineCtx || !pieCtx || !barCtx || !window.Chart) return;
 
   Object.values(state.charts).forEach((chart) => chart.destroy());
 
@@ -137,7 +121,7 @@ function initCharts() {
 function simulateRealtimeMetrics() {
   clearInterval(state.metricTimer);
   state.metricTimer = setInterval(() => {
-    if (!state.data.length || ui.dashboardPanel.classList.contains('hidden')) return;
+    if (!state.data.length) return;
     const i = Math.floor(Math.random() * state.data.length);
     state.data[i].performance = Math.max(20, Math.min(100, state.data[i].performance + Math.round((Math.random() - 0.5) * 8)));
     state.data[i].revenue = Math.max(1000, state.data[i].revenue + Math.round((Math.random() - 0.4) * 4000));
@@ -160,24 +144,19 @@ function exportCsv() {
 }
 
 async function loadDashboard() {
-  const [{ user, permissions }, usersRes, dataRes] = await Promise.all([
-    api('/api/me'),
+  const [usersRes, dataRes] = await Promise.all([
     api('/api/users').catch(() => ({ users: [] })),
     api('/api/data').catch(() => ({ data: [] }))
   ]);
 
-  state.currentUser = user;
-  state.permissions = permissions;
   state.users = usersRes.users;
   state.data = dataRes.data;
 
-  ui.userBadge.textContent = `${user.name} (${user.role})`;
   updateKpis();
   renderUsers();
-  setRoleUi();
   initCharts();
   simulateRealtimeMetrics();
-  notify('Dashboard loaded successfully');
+  notify('Dashboard synchronized');
 }
 
 function bindNavigation() {
@@ -221,35 +200,6 @@ function bindLazyLoad() {
   targets.forEach((target) => observer.observe(target));
 }
 
-ui.loginForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  const form = new FormData(ui.loginForm);
-  try {
-    await api('/api/login', {
-      method: 'POST',
-      body: JSON.stringify({ username: form.get('username'), password: form.get('password') })
-    });
-    ui.loginPanel.classList.add('hidden');
-    ui.dashboardPanel.classList.remove('hidden');
-    await loadDashboard();
-  } catch (error) {
-    notify(error.message, 'error');
-  }
-});
-
-ui.logoutBtn.addEventListener('click', async () => {
-  try {
-    await api('/api/logout', { method: 'POST' });
-  } catch (_error) {
-    // no-op
-  }
-  clearInterval(state.metricTimer);
-  ui.dashboardPanel.classList.add('hidden');
-  ui.loginPanel.classList.remove('hidden');
-  ui.userBadge.textContent = 'Guest';
-  notify('Logged out');
-});
-
 ui.userForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const form = new FormData(ui.userForm);
@@ -268,7 +218,7 @@ ui.userForm.addEventListener('submit', async (event) => {
     renderUsers(ui.globalSearch.value);
     ui.userForm.reset();
     updateKpis();
-    notify('User created');
+    notify('Crew member added');
   } catch (error) {
     notify(error.message, 'error');
   }
@@ -285,7 +235,7 @@ ui.userTableBody.addEventListener('click', async (event) => {
   try {
     if (action === 'delete') {
       await api(`/api/users/${userId}`, { method: 'DELETE' });
-      notify(`Deleted user: ${record.username}`);
+      notify(`Deleted crew profile: ${record.username}`);
     }
 
     if (action === 'edit') {
@@ -295,7 +245,7 @@ ui.userTableBody.addEventListener('click', async (event) => {
         method: 'PUT',
         body: JSON.stringify({ name: nextName })
       });
-      notify(`Updated user: ${record.username}`);
+      notify(`Updated crew profile: ${record.username}`);
     }
 
     const { users } = await api('/api/users');
@@ -322,7 +272,8 @@ document.querySelectorAll('th[data-sort]').forEach((header) => {
 ui.settingsForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const form = new FormData(ui.settingsForm);
-  notify(`Settings saved for ${form.get('displayName')}`);
+  ui.userBadge.textContent = `${form.get('displayName')} • Autonomous`;
+  notify(`System profile updated for ${form.get('displayName')}`);
 });
 
 ui.exportCsv.addEventListener('click', exportCsv);
@@ -332,11 +283,5 @@ ui.themeToggle.addEventListener('click', () => document.documentElement.classLis
   bindNavigation();
   bindDragDrop();
   bindLazyLoad();
-  try {
-    await loadDashboard();
-    ui.loginPanel.classList.add('hidden');
-    ui.dashboardPanel.classList.remove('hidden');
-  } catch (_error) {
-    ui.loginPanel.classList.remove('hidden');
-  }
+  await loadDashboard();
 })();

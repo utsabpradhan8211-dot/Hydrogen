@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Global Standard futuristic enterprise dashboard with secure authentication, analytics, and role-based control." />
-    <meta name="theme-color" content="#081122" />
-    <title>GLOBAL STANDARD • Command Dashboard</title>
+    <meta name="description" content="Global Standard futuristic enterprise dashboard with autonomous analytics and predictive operations control." />
+    <meta name="theme-color" content="#050812" />
+    <title>GLOBAL STANDARD • Quantum Ops Grid</title>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="stylesheet" href="styles.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
@@ -13,18 +13,19 @@
   </head>
   <body>
     <div class="noise" aria-hidden="true"></div>
+    <div class="aurora" aria-hidden="true"></div>
     <div id="app" class="app" aria-live="polite">
       <aside class="sidebar" aria-label="Primary navigation">
         <div>
           <h1>GLOBAL <span>STANDARD</span></h1>
-          <p class="muted">Operations Command</p>
+          <p class="muted">Quantum Operations Grid • Year 2060</p>
         </div>
 
         <nav>
           <button class="nav-link active" data-section="overview" aria-controls="overview">Overview</button>
           <button class="nav-link" data-section="analytics" aria-controls="analytics">Analytics</button>
-          <button class="nav-link" data-section="users" aria-controls="users">Users</button>
-          <button class="nav-link" data-section="settings" aria-controls="settings">Settings</button>
+          <button class="nav-link" data-section="users" aria-controls="users">Crew Matrix</button>
+          <button class="nav-link" data-section="settings" aria-controls="settings">System</button>
         </nav>
 
         <div class="theme-toggle-wrap card compact">
@@ -35,29 +36,19 @@
 
       <main class="content" role="main">
         <header class="topbar card compact" role="banner">
-          <input id="globalSearch" aria-label="Search users and records" type="search" placeholder="Search users, roles, records..." />
+          <input id="globalSearch" aria-label="Search users and records" type="search" placeholder="Search crew, roles, sectors..." />
           <div class="profile-wrap">
-            <span id="userBadge" class="chip">Guest</span>
-            <button id="logoutBtn" class="secondary-btn" aria-label="Logout current session">Logout</button>
+            <span id="userBadge" class="chip">Control AI • Autonomous</span>
+            <span class="pulse">LIVE</span>
           </div>
         </header>
 
-        <section id="loginPanel" class="panel card" aria-label="Authentication panel">
-          <h2>Secure Login</h2>
-          <p class="muted">Demo users: <strong>admin/Admin@123</strong>, <strong>manager/Manager@123</strong>, <strong>user/User@123</strong></p>
-          <form id="loginForm">
-            <label>Username<input type="text" name="username" required maxlength="40" autocomplete="username" /></label>
-            <label>Password<input type="password" name="password" required maxlength="80" autocomplete="current-password" /></label>
-            <button type="submit">Login</button>
-          </form>
-        </section>
-
-        <section id="dashboardPanel" class="hidden" aria-label="Dashboard panel">
+        <section id="dashboardPanel" aria-label="Dashboard panel">
           <section class="kpi-grid" id="kpiGrid" aria-label="KPI cards">
-            <article class="kpi-card card" draggable="true"><h3>Revenue</h3><p id="kpiRevenue">$0</p></article>
-            <article class="kpi-card card" draggable="true"><h3>Users</h3><p id="kpiUsers">0</p></article>
+            <article class="kpi-card card" draggable="true"><h3>Revenue Flow</h3><p id="kpiRevenue">$0</p></article>
+            <article class="kpi-card card" draggable="true"><h3>Active Crew</h3><p id="kpiUsers">0</p></article>
             <article class="kpi-card card" draggable="true"><h3>Performance</h3><p id="kpiPerformance">0%</p></article>
-            <article class="kpi-card card" draggable="true"><h3>Activity</h3><p id="kpiActivity">0 events</p></article>
+            <article class="kpi-card card" draggable="true"><h3>Activity Pulse</h3><p id="kpiActivity">0 events</p></article>
           </section>
 
           <section id="overview" class="grid-two" data-lazy="true" aria-label="Overview charts">
@@ -82,7 +73,7 @@
           </section>
 
           <section id="users" class="card section hidden">
-            <h3>User Management</h3>
+            <h3>Crew Management</h3>
             <form id="userForm" class="inline-form">
               <input name="name" placeholder="Name" required maxlength="90" />
               <input name="username" placeholder="Username" required maxlength="40" />
@@ -92,7 +83,7 @@
                 <option>Manager</option>
                 <option selected>User</option>
               </select>
-              <button type="submit">Add User</button>
+              <button type="submit">Add Crew</button>
             </form>
             <table aria-label="Users table">
               <thead>
@@ -109,7 +100,7 @@
           </section>
 
           <section id="settings" class="card section hidden">
-            <h3>Settings</h3>
+            <h3>System Settings</h3>
             <form id="settingsForm" class="inline-form">
               <input name="displayName" placeholder="Display name" maxlength="90" required />
               <input name="email" placeholder="Email" type="email" required maxlength="120" />
